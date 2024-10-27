@@ -15,7 +15,7 @@ class Customer(models.Model):
     delivery_date = models.DateField(null=True, blank=True)
     order_completed = models.BooleanField(default=False)
     delivery_confirmation_date = models.DateField(null=True, blank=True)  # Date the order is marked as delivered
-
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     def __str__(self):
         return self.Full_Name
 

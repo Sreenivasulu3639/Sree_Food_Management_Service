@@ -14,12 +14,13 @@ def PlanSelection(request):
     form = CustomerForm()
 
     if request.method == 'POST':
+
         form = CustomerForm(request.POST)
 
 
         if form.is_valid():
             customer = form.save(commit=False)
-            customer.Plan_Type = "Two Week Veg 499"  # Set plan type here or get dynamically
+            customer.Plan_Type = request.POST.get('plan_type')  # Set plan type here or get dynamically
             customer.save()
 
             # Fetch all vendors
@@ -48,23 +49,27 @@ def PlanSelection(request):
 def vendor_details(request):
     vendor_name = request.session.get('vendor_name')
     vendor_phone = request.session.get('vendor_phone')
-    customer = Customer.objects.filter().first()  # Assuming email as unique identifier
+    customer_id = request.session.get('customer_id')
 
-    # Check if vendor details are found and if customer exists
-    if vendor_name and vendor_phone:
+    # Verify that customer_id, vendor_name, and vendor_phone are set in the session
+    if vendor_name and vendor_phone and customer_id:
+        # Retrieve the specific customer based on the session ID
+        customer = Customer.objects.filter(id=customer_id).first()
+
         if customer:  # Check if customer is found
             context = {
                 'vendor_name': vendor_name,
                 'vendor_phone': vendor_phone,
-                'customer_name': customer.Full_Name,  # This will not raise an error now
-                'plan_type': customer.Plan_Type  # This will not raise an error now
+                'customer_name': customer.Full_Name,
+                'plan_type': customer.Plan_Type
             }
             return render(request, 'customers/vendor_details.html', context)
         else:
             messages.error(request, "Customer not found.")
             return redirect('PlanSelect')
     else:
-        messages.error(request, "Vendor details not found.")
+        # If the session data is incomplete, show an error or redirect
+        messages.error(request, "Vendor or customer details not found.")
         return redirect('PlanSelect')
 
 
@@ -130,7 +135,8 @@ def allotPlans(request, planType, cost):
             Address_Type=address_type,
             Phone=phone,
             Email=email,
-            Plan_Type=planType  # Save the plan type directly
+            Plan_Type=planType,
+            cost= cost
         )
 
         # Fetch all vendors
@@ -153,6 +159,7 @@ def allotPlans(request, planType, cost):
             # Store vendor details in the session
             request.session['vendor_name'] = selected_vendor.vendor.Vendor_Name
             request.session['vendor_phone'] = selected_vendor.vendor.Vendor_Phone
+            request.session['customer_id'] = customer.pk
 
             # Redirect to the vendor details page
             return redirect('vendor_details')
@@ -162,7 +169,7 @@ def allotPlans(request, planType, cost):
             return redirect(request.path)
 
     context = {'cost': cost}
-    return render(request, "customers/twoWeekVeg.html", context)
+    return render(request, "customers/confirm_order.html", context)
 
 # # def allotPlans(request, planType, cost):
 # #     form = CustomerForm()
@@ -201,11 +208,11 @@ def allotPlans(request, planType, cost):
 # #                 messages.error(request, "No vendors available.")  # Error if no vendors are found
 # #
 # #     context = {'form': form, 'cost': cost}
-# #     return render(request, "customers/twoWeekVeg.html", context)
+# #     return render(request, "customers/confirm_order.html", context)
 #
 #
 def Free(request):
-    return allotPlans(request, "Free Trial", "Free!")
+    return allotPlans(request, "Free Trial", "0")
 
 def TwoWeekVegPlan(request):
     return allotPlans(request, "Two week veg 499", "499")
@@ -268,7 +275,7 @@ def submit_feedback(request):
 #
 #
 # #     context = {'form':form, 'cost':cost}
-# #     return render(request,"customers/twoWeekVeg.html",context )
+# #     return render(request,"customers/confirm_order.html",context )
 #
 #
 
