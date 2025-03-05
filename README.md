@@ -1,4 +1,4 @@
-# Sree_Food_Managament_Service Using Django
+# Sree_Food_Management_Service Using Django
 
 Sree Food Management Service is a Django based web application which strives to make an online portal for both vendors and customers. Using Interactive GUI anyone can quickly learn to use the complete system. This system will give power and flexibility to the administrator to manage the entire system from a single online portal.
 
